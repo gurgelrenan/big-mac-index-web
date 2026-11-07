@@ -1,0 +1,40 @@
+service: big-mac-index-web
+image: gurgelrenan/big-mac-index-web
+servers:
+  web:
+    hosts:
+      - <%= ENV.fetch("KAMAL_HOST", "187.77.50.57") %>
+    options:
+      memory: 64m
+      cpus: 0.5
+registry:
+  server: ghcr.io
+  username: gurgelrenan
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+builder:
+  arch: amd64
+  context: .
+proxy:
+  host: bigmac.gurgelrenan.tech
+  app_port: 80
+  ssl: false
+  forward_headers: true
+  healthcheck:
+    path: /up
+accessories:
+  router:
+    image: nginx:stable-alpine
+    host: <%= ENV.fetch("KAMAL_HOST", "187.77.50.57") %>
+    options:
+      memory: 32m
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.bigmac-web.rule: "Host(`bigmac.gurgelrenan.tech`)"
+      traefik.http.routers.bigmac-web.entrypoints: websecure
+      traefik.http.routers.bigmac-web.tls: "true"
+      traefik.http.routers.bigmac-web.tls.certresolver: letsencrypt
+      traefik.http.routers.bigmac-web.service: bigmac-web
+      traefik.http.services.bigmac-web.loadbalancer.server.port: "80"
+    files:
+      - config/deploy-router.conf:/etc/nginx/conf.d/default.conf:ro

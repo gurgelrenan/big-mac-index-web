@@ -1,0 +1,10 @@
+.git
+node_modules
+dist
+.env*
+.kamal
+.bundle
+playwright-report
+test-results
+design
+*.log

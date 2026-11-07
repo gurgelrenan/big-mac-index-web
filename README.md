@@ -2,6 +2,8 @@
 
 Frontend independente em React + TypeScript + Vite para a Big Mac Index API. Interface em português, responsiva, com comparação entre países, explicação do índice bruto, escolha de edição histórica e ranking com orçamento editável.
 
+**Produção:** [bigmac.gurgelrenan.tech](https://bigmac.gurgelrenan.tech). A [API pública](https://bigmac-api.gurgelrenan.tech/api/v1/big_macs/latest) roda na mesma VPS Hostinger; o site consulta `/api/v1` pelo próprio domínio.
+
 ## Desenvolvimento
 
 Requisitos: Node.js 20.19+ (ou 22.12+) e a API Rails com o banco populado.
@@ -30,7 +32,7 @@ npm run build
 - A resposta segue JSON:API (`data[].attributes`). Valores decimais em string são normalizados e registros sem preço/câmbio positivo são descartados. Países são comparados dentro da mesma edição.
 - Não há valores fictícios nem fallback silencioso. Carregamento, falha com nova tentativa, ausência de dados e busca sem resultados têm estados próprios.
 
-Para publicar, defina `VITE_API_BASE_URL=https://seu-host/api/v1` antes de `npm run build` e hospede `dist/`. O proxy do Vite funciona somente no desenvolvimento. Em produção, configure um proxy reverso para `/api` ou permita explicitamente a origem do frontend no CORS da API. Variáveis `VITE_*` são públicas: nunca inclua tokens nelas. Não há deploy configurado ou executado neste projeto.
+O deploy na VPS usa Docker, Nginx e Kamal; veja [DEPLOY.md](DEPLOY.md). O Nginx encaminha `/api` à API pela rede interna, preservando o acesso no mesmo domínio. Para outra hospedagem, defina `VITE_API_BASE_URL=https://seu-host/api/v1` antes de `npm run build` e hospede `dist/`; configure CORS para a origem do frontend caso a API use outro domínio. O proxy do Vite funciona somente no desenvolvimento. Variáveis `VITE_*` são públicas: nunca inclua tokens nelas.
 
 ## Cálculos
 
@@ -51,7 +53,8 @@ Fontes: DM Sans e DM Serif Display via Google Fonts, com fallback local. Dados: 
 - API Rails e proxy do Vite verificados com 54 registros reais da edição de julho de 2026.
 - Revisão visual concluída com capturas reais em desktop (1440 × 1000) e celular emulado (390 × 664), usando Chromium/Playwright. Seletor de ordenação ampliado após inspeção.
 - 16 testes de navegador aprovados: dados reais, troca de países, mesma seleção, edições, orçamento, filtro, recuperação de erro e resposta vazia. Sem erros JavaScript ou estouro horizontal no fluxo principal.
-- O MCP Node carregou Playwright, mas bloqueou conexão/lançamento de navegador com EPERM; a execução final foi feita pelo Playwright CLI com permissão local. Não foi usado um servidor Playwright MCP dedicado.
+- Deploy inicial validado em 6 de novembro de 2026: frontend e API com HTTPS, 2.056 registros importados e 54 registros na edição de julho de 2026. Os 16 testes Playwright passaram contra o site publicado em desktop e celular. O Fiscaliza continuou respondendo com HTTP 200.
+- `npm run lint` conclui com um aviso existente de `react(set-state-in-effect)` em `src/App.tsx`.
 
 ## Testes no navegador
 
@@ -59,9 +62,11 @@ Com frontend e API em execução:
 
 ```sh
 npm run test:e2e
+# Ou contra o deploy de produção:
+PLAYWRIGHT_BASE_URL=https://bigmac.gurgelrenan.tech npm run test:e2e
 ```
 
-O padrão usa o Google Chrome instalado, em perfil temporário isolado. Para usar outro Chromium, informe `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. A URL pode ser alterada com `PLAYWRIGHT_BASE_URL`. O relatório completo fica em `playwright-report/index.html` (ignorado pelo Git). Os testes de falha e ausência de dados interceptam a resposta somente no navegador de teste; os demais consultam a API local.
+O padrão usa o Google Chrome instalado, em perfil temporário isolado. Para usar outro Chromium, informe `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. A URL pode ser alterada com `PLAYWRIGHT_BASE_URL`. O relatório completo fica em `playwright-report/index.html` (ignorado pelo Git). Os testes de falha e ausência de dados interceptam a resposta somente no navegador de teste; os demais consultam a API do ambiente selecionado.
 
 Capturas revisadas: [desktop](design/review-desktop.png) e [celular](design/review-mobile.png).
 

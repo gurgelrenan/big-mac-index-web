@@ -31,3 +31,9 @@ test-results/
 .env
 .env.*
 !.env.example
+
+# Deployment tooling and secrets
+.bundle/
+.kamal/secrets
+.kamal/secrets.*
+!.kamal/secrets.example
